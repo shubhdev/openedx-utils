@@ -51,7 +51,8 @@ def preprocess(body_content):
 downloads file associated with the link to the current directory
 """
 def download(url):
-    p = subprocess.check_output(["bash","downloader.sh"])
+    p = subprocess.check_output(["bash","downloader.sh",url])
+    print p
     if not p == "1\n":
         return ""
     return url.split('/')[-1]
@@ -120,12 +121,18 @@ def process_result(result):
     result = json.dumps(result)
     return result
 """
-
-
+def test_grading():
+    test_submission ={
+        "submission":"#include<iostream>\nint main(){std::cout<<1;return 0;}"
+        "lang":"c++"
+        "tests":"testcases_dummy"
+    }
+    grade(test_submission)
 if __name__ == "__main__":
 
     print ("Welcome!")
-    url = input("enter the url")
+    url = raw_input("enter the url")
+    print "downloading from "+url
     filename = download(url)
     if not filename == "":
         print ("File {filename} successfully downloaded").format(filename= filename)
