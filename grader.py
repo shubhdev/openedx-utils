@@ -52,6 +52,8 @@ downloads file associated with the link to the current directory
 """
 def download(url):
     p = subprocess.check_output(["bash","downloader.sh"])
+    if not p == "1\n":
+        return ""
     return url.split('/')[-1]
 def grade(submission):
     submission = json.loads(submission)
@@ -122,5 +124,13 @@ def process_result(result):
 
 if __name__ == "__main__":
 
-    server = BaseHTTPServer.HTTPServer(("localhost", 1710), HTTPHandler)
+    print ("Welcome!")
+    url = input("enter the url")
+    filename = download(url)
+    if not filename == "":
+        print ("File {filename} successfully downloaded").format(filename= filename)
+    else:
+        print ("Error while downloading")
+    """server = BaseHTTPServer.HTTPServer(("localhost", 1710), HTTPHandler)
     server.serve_forever()
+    """
