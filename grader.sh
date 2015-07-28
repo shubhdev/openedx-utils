@@ -1,11 +1,12 @@
-  language=$1
+#!/bin/bash
+language=$1
 tests=$2
 source_code=$3
 echo "lang:$language,testcases:$tests"
 compile(){
   case $language in
-    "c++")$(g++ -x c++ prog -o progc >/dev/null 2>&1 );;
-    "python2")$(python2 -m py_compile prog);;
+    "c++")err=$(g++ -x c++ prog -o progc 2>&1);;
+    "python2")err=$(python2 -m py_compile prog 2>&1);;
   esac
 }
 execute(){
@@ -18,9 +19,13 @@ execute(){
 }
 compile
 if [ $? -ne 0 ]; then
+  #error codes:
+  #0 : success
+  #1 : compilation error
+  #2 : runtime error
   echo $(echo $err | cut -c-2048)
 else
-  for file in $(find -name "input*.dat" -type f); do
+  for file in $(find /tests -name "input*.dat" -type f); do
     output_file=${file/input/res}
     execute
     #check if there was any runtime error
