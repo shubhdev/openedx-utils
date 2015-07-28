@@ -1,4 +1,4 @@
-language=$1
+  language=$1
 tests=$2
 source_code=$3
 echo "lang:$language,testcases:$tests"
@@ -12,18 +12,18 @@ execute(){
   #echo $file
   #echo $output_file
   case $language in
-    "c++")$(./progc <$file >$output_file);;
-    "python2")$(python2 progc <$file >$output_file);;
+    "c++")err=$(./progc <$file >$output_file);;
+    "python2")err=$(python2 progc <$file >$output_file);;
   esac
 }
 compile
 if [ $? -ne 0 ]; then
-  echo "compilation failed"
+  echo $(echo $err | cut -c-2048)
 else
   for file in $(find -name "input*.dat" -type f); do
     output_file=${file/input/res}
     execute
-    #TODO check if there was any runtime error
+    #check if there was any runtime error
     if [ $? -ne 0 ]; then
       echo "Runtime Error on testcase: $file"
       continue
