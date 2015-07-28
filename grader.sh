@@ -1,4 +1,9 @@
 #!/bin/bash
+#error codes:
+# 0 : success
+# 1 : compilation error
+# 2 : runtime error
+#TODO put these error codes in a config file
 language=$1
 tests=$2
 source_code=$3
@@ -13,17 +18,14 @@ execute(){
   #echo $file
   #echo $output_file
   case $language in
-    "c++")err=$(./progc <$file >$output_file);;
-    "python2")err=$(python2 progc <$file >$output_file);;
+    "c++")err_msg=$(./progc <$file >$output_file);;
+    "python2")err_msg=$(python2 progc <$file >$output_file);;
   esac
 }
 compile
 if [ $? -ne 0 ]; then
-  #error codes:
-  #0 : success
-  #1 : compilation error
-  #2 : runtime error
-  echo $(echo $err | cut -c-2048)
+  err=1
+  echo $(echo $err_msg | cut -c-2048)
 else
   for file in $(find /tests -name "input*.dat" -type f); do
     output_file=${file/input/res}
