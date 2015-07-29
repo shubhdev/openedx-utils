@@ -1,6 +1,8 @@
 import BaseHTTPServer
 import json
 import os
+import time
+import random
 import subprocess
 import re
 """
@@ -77,6 +79,9 @@ def download(url):
 
 # returns a random folder name to be used by the grader
 def get_random_folder_name():
+    curr_time = str(int(time.time()*1000))
+    random_num = int(random.random()*1000)
+    return curr_time+'_'+random_num
 def grade(submission_info):
     submission_info = json.loads(submission_info)
     student_response = submission["submission"]
