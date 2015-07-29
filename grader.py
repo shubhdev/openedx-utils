@@ -81,12 +81,12 @@ def download(url):
 def get_random_folder_name():
     curr_time = str(int(time.time()*1000))
     random_num = int(random.random()*1000)
-    return curr_time+'_'+random_num
+    return curr_time+'_'+str(random_num)
 def grade(submission_info):
     submission_info = json.loads(submission_info)
-    student_response = submission["submission"]
-    lang = submission["lang"]
-    tests = submission["tests"]
+    student_response = submission_info["submission"]
+    lang = submission_info["lang"]
+    tests = submission_info["tests"]
     #TODO make a new temporary folder which will hold the student submission source code and the output files.
     #the folder is made as there can be more than one simultaneous checking of submissions, and having files in a common directory
     #will lead to a race condition
@@ -158,13 +158,17 @@ def process_result(result):
     result = json.dumps(result)
     return result
 """
+def test_random_folder_name():
+    for i in xrange(0,10):
+        print get_random_folder_name()
+        time.sleep(0.05)
 def test_grading():
     test_submission ={
-        "submission":"#include<iostream>\nint main(){std::cout<<1;return 0;}"
-        "lang":"c++"
+        "submission":"#include<iostream>\nint main(){int x;std::cin>>x;std::cout<<x;return 0;}",
+        "lang":"c++",
         "tests":"tests"
     }
-    grade(test_submission)
+    grade(json.dumps(test_submission))
 def test_download():
     url = raw_input("enter the url")
     print "downloading from "+url
@@ -175,7 +179,8 @@ def test_download():
         print ("Error while downloading")
 if __name__ == "__main__":
     print ("Welcome!")
-
+    #test_random_folder_name()
+    test_grading()
     """server = BaseHTTPServer.HTTPServer(("localhost", 1710), HTTPHandler)
     server.serve_forever()
     """
