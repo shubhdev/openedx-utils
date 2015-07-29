@@ -83,7 +83,6 @@ def get_random_folder_name():
     random_num = int(random.random()*1000)
     return curr_time+'_'+str(random_num)
 def grade(submission_info):
-    submission_info = json.loads(submission_info)
     student_response = submission_info["submission"]
     lang = submission_info["lang"]
     tests = submission_info["tests"]
@@ -102,8 +101,10 @@ def grade(submission_info):
     source_file.write(student_response)
     source_file.close()
     result = subprocess.check_output(["bash","grader.sh",lang,tests,source_directory])
-    result = json.loads(result)
-    print result
+    #print result
+    result = json.loads(result.replace('\n','\\n'))    #this is necessary because the output of the bash script may contain newline,which is percived as is in python
+						       #string. Read http://stackoverflow.com/questions/22394235/invalid-control-character-with-python-json-loads
+    return result
     """
     p = subprocess.Popen(["javac", "/edx/java-grader/Program.java"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     out, err = p.communicate()
@@ -165,10 +166,10 @@ def test_random_folder_name():
 def test_grading():
     test_submission ={
         "submission":"#include<iostream>\nint main(){int x;std::cin>>x;std::cout<<x;return 0;}",
-        "lang":"c++",
+        "lang":"python2",
         "tests":"tests"
     }
-    grade(json.dumps(test_submission))
+    print grade(test_submission)
 def test_download():
     url = raw_input("enter the url")
     print "downloading from "+url
