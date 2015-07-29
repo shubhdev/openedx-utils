@@ -6,18 +6,35 @@ import re
 """
 response structure from the xqueue
 {
-student_response,
-submission_info,
-grader_payload
+    "xqueue_body":{
+        "student_response":string     ##the code submitted by the student as a string
+        "submission_info":{
+            "trial":boolean,          ##whether the submission is a trial submission( to be run on sample test cases)
+            "lang":string               ##language of the submission
+        },
+        "grader_payload":{
+            "main_tests":string,      ##url of the main test cases
+            "sample_tests":string     ##url of the sample test cases
+        }
+    },
+    "student_info": {
+            'anonymous_student_id': anonymous_student_id,
+            'submission_time': qtime,
+    }
 }
+
+There might be fields in the main json object other than xqueue_body, but we dont need them.
+More can be found out about the structure of the xqueue response from the file:
+openedx/common/lib/capa/capa/capa_base.py in the class "CodeResponse"
+
 """
 class HTTPHandler(BaseHTTPServer.BaseHTTPRequestHandler):
 
     def do_POST(self):
         body_len = int(self.headers.getheader('content-length', 0))
         body_content = self.rfile.read(body_len)
-        submission = preprocess(body_content)
-        result = grade(submission)
+        submission_info = preprocess(body_content)
+        result = grade(submission_info)
         self.send_response(200)
         self.end_headers()
         self.wfile.write(result)
@@ -29,6 +46,7 @@ def preprocess(body_content):
     student_response = json_object["student_response"]
     grader_payload = json.loads(json_object["grader_payload"])
     #download the testcases, the grader payload should contain the links to the testcases
+    #TODO do this in a try,exception body to ensure the validity of the json
     testfiles_main = grader_payload["main_tests"]
     testfiles_trial = grader_payload["sample_tests"]
     main_tests = download(testfiles_main)
@@ -41,12 +59,12 @@ def preprocess(body_content):
         tests = main_tests
     lang = submission_info["lang"]
     #return the preprocessing result as a json string
-    result = {
+    info = {
         "lang": lang,
         "submission": student_response,
         "tests": tests
     }
-    return json.dumps(result)
+    return info
 """
 downloads file associated with the link to the current directory
 """
@@ -56,15 +74,29 @@ def download(url):
     if not p == "1\n":
         return ""
     return url.split('/')[-1]
-def grade(submission):
-    submission = json.loads(submission)
+
+# returns a random folder name to be used by the grader
+def get_random_folder_name():
+def grade(submission_info):
+    submission_info = json.loads(submission_info)
     student_response = submission["submission"]
     lang = submission["lang"]
     tests = submission["tests"]
-    source_file = open("prog", 'w')
+    #TODO make a new temporary folder which will hold the student submission source code and the output files.
+    #the folder is made as there can be more than one simultaneous checking of submissions, and having files in a common directory
+    #will lead to a race condition
+    #there can be more than one ways to get a folder name which is unique to each submission,here we will concatenate
+    #the current unix timestamp with a random number
+    #in the rare case that 2 submissions are being processed at exactly the same timestamp, the random number will with very high probability
+    #ensure that the name is unique
+    source_directory = get_random_folder_name()
+    #check if the folder with given name already exists, assign a new folder name if it does
+    while os.path.isdir(source_directory):source_directory=get_random_folder_name()
+    os.mkdir(source_directory)
+    source_file = open("{0}/prog".format(source_directory), 'w')
     source_file.write(student_response)
     source_file.close()
-    result = subprocess.check_output(["bash","grader.sh",lang,tests,"prog"])
+    result = subprocess.check_output(["bash","grader.sh",lang,tests,source_directory])
     result = json.loads(result)
     print result
     """
@@ -125,12 +157,10 @@ def test_grading():
     test_submission ={
         "submission":"#include<iostream>\nint main(){std::cout<<1;return 0;}"
         "lang":"c++"
-        "tests":"testcases_dummy"
+        "tests":"tests"
     }
     grade(test_submission)
-if __name__ == "__main__":
-
-    print ("Welcome!")
+def test_download():
     url = raw_input("enter the url")
     print "downloading from "+url
     filename = download(url)
@@ -138,6 +168,9 @@ if __name__ == "__main__":
         print ("File {filename} successfully downloaded").format(filename= filename)
     else:
         print ("Error while downloading")
+if __name__ == "__main__":
+    print ("Welcome!")
+
     """server = BaseHTTPServer.HTTPServer(("localhost", 1710), HTTPHandler)
     server.serve_forever()
     """
