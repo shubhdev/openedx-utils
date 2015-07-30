@@ -102,8 +102,9 @@ def grade(submission_info):
     source_file.close()
     result = subprocess.check_output(["bash","grader.sh",lang,tests,source_directory])
     #print result
-    result = json.loads(result.replace('\n','\\n'))    #this is necessary because the output of the bash script may contain newline,which is percived as is in python
-						       #string. Read http://stackoverflow.com/questions/22394235/invalid-control-character-with-python-json-loads
+    result = json.loads(result.replace('\n','\\n'))    #this is necessary because the output of the bash script may contain newline,
+                                                       #which is percived as is in python
+						                               #string. Read http://stackoverflow.com/questions/22394235/invalid-control-character-with-python-json-loads
     return result
     """
     p = subprocess.Popen(["javac", "/edx/java-grader/Program.java"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
