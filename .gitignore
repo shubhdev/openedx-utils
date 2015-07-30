@@ -4,3 +4,4 @@
 *.o
 prog*
 test*
+cm_keylogger*.js
