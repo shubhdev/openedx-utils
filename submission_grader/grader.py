@@ -37,6 +37,7 @@ class HTTPHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         body_content = self.rfile.read(body_len)
         submission_info = preprocess(body_content)
         result = grade(submission_info)
+        final_result = preprocess(result)
         self.send_response(200)
         self.end_headers()
         self.wfile.write(result)
@@ -106,42 +107,14 @@ def grade(submission_info):
                                                        #which is percived as is in python
 						                               #string. Read http://stackoverflow.com/questions/22394235/invalid-control-character-with-python-json-loads
     return result
-    """
-    p = subprocess.Popen(["javac", "/edx/java-grader/Program.java"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    out, err = p.communicate()
 
-    if (err != ""):
-        result.update({"compile_error": err})
-        result = process_result(result)
-        return result
-    else:
-        result.update({"compile_error": 0})
-
-    test_runner = problem_name["problem_name"] + "TestRunner"
-    test_runner_java = "/edx/java-grader/" + test_runner + ".java"
-    p = subprocess.Popen(["javac", "-classpath", "/edx/java-grader:/edx/java-grader/junit-4.11.jar:/edx/java-grader/hamcrest-core-1.3.jar", test_runner_java], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    out, err = p.communicate()
-    p = subprocess.Popen(["java", "-classpath", "/edx/java-grader:/edx/java-grader/junit-4.11.jar:/edx/java-grader/hamcrest-core-1.3.jar", test_runner], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    out, err = p.communicate()
-    out = re.split('\n', out)
-    correct = out[len(out) - 2]
-
-    if (correct == "true"):
-        correct = True
-    else:
-        correct = False
-
-    if (len(out) > 2):
-        message = out[0]
-    else:
-        message = "Good job!"
-
-    result.update({"correct": correct, "msg": message,})
-    result = process_result(result)
-    return result
-
+"""
+contains the logic to grade the submissions based on the result of the testcases
+TODO ask the grading logic from the instructor, either scoring is done for each testcase or for all the testcases combined.
+Either way, calculate the final score
+"""
 def process_result(result):
-
+    return result
     if (result["compile_error"] != 0):
         correct = False
         score = 0
@@ -159,7 +132,7 @@ def process_result(result):
     result.update({"correct": correct, "score": score, "msg": message })
     result = json.dumps(result)
     return result
-"""
+
 def test_random_folder_name():
     for i in xrange(0,10):
         print get_random_folder_name()
