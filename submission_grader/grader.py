@@ -35,19 +35,21 @@ class HTTPHandler(BaseHTTPServer.BaseHTTPRequestHandler):
     def do_POST(self):
         body_len = int(self.headers.getheader('content-length', 0))
         body_content = self.rfile.read(body_len)
-        submission_info = preprocess(body_content)
+        print (self.headers.getheader('content-type'))
+	print ("recieved: {0}".format(body_content))
+	submission_info = preprocess(body_content)
         result = grade(submission_info)
-        final_result = preprocess(result)
+        final_result = process_result(result)
         self.send_response(200)
         self.end_headers()
         self.wfile.write(result)
 
 def preprocess(body_content):
     json_object = json.loads(body_content)
-    json_object = json.loads(json_object["xqueue_body"])
-    submission_info = json.loads(json_object["submission_info"])
+    json_object = json_object["xqueue_body"]
+    submission_info = json_object["submission_info"]
     student_response = json_object["student_response"]
-    grader_payload = json.loads(json_object["grader_payload"])
+    grader_payload = json_object["grader_payload"]
     #download the testcases, the grader payload should contain the links to the testcases
     #TODO do this in a try,exception body to ensure the validity of the json
     testfiles_main = grader_payload["main_tests"]
@@ -72,11 +74,11 @@ def preprocess(body_content):
 downloads file associated with the link to the current directory
 """
 def download(url):
-    p = subprocess.check_output(["bash","downloader.sh",url])
-    print p
-    if not p == "1\n":
-        return ""
-    return url.split('/')[-1]
+    #p = subprocess.check_output(["bash","downloader.sh",url])
+    #print p
+    #if not p == "1\n":
+    #    return ""
+    return url#.split('/')[-1]
 
 # returns a random folder name to be used by the grader
 def get_random_folder_name():
@@ -114,7 +116,7 @@ TODO ask the grading logic from the instructor, either scoring is done for each 
 Either way, calculate the final score
 """
 def process_result(result):
-    return result
+    return json.dumps(result)
     if (result["compile_error"] != 0):
         correct = False
         score = 0
@@ -155,7 +157,6 @@ def test_download():
 if __name__ == "__main__":
     print ("Welcome!")
     #test_random_folder_name()
-    test_grading()
-    """server = BaseHTTPServer.HTTPServer(("localhost", 1710), HTTPHandler)
+    #test_grading()
+    server = BaseHTTPServer.HTTPServer(("localhost", 1710), HTTPHandler)
     server.serve_forever()
-    """
