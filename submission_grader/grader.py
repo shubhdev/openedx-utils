@@ -36,8 +36,8 @@ class HTTPHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         body_len = int(self.headers.getheader('content-length', 0))
         body_content = self.rfile.read(body_len)
         print (self.headers.getheader('content-type'))
-	print ("recieved: {0}".format(body_content))
-	submission_info = preprocess(body_content)
+	    print ("recieved: {0}".format(body_content))
+	    submission_info = preprocess(body_content)
         result = grade(submission_info)
         final_result = process_result(result)
         self.send_response(200)
@@ -89,15 +89,15 @@ def grade(submission_info):
     student_response = submission_info["submission"]
     lang = submission_info["lang"]
     tests = submission_info["tests"]
-    #TODO make a new temporary folder which will hold the student submission source code and the output files.
+    #make a new temporary folder which will hold the student submission source code and the output files.
     #the folder is made as there can be more than one simultaneous checking of submissions, and having files in a common directory
-    #will lead to a race condition
+    #will lead to a data race condition
     #there can be more than one ways to get a folder name which is unique to each submission,here we will concatenate
     #the current unix timestamp with a random number
     #in the rare case that 2 submissions are being processed at exactly the same timestamp, the random number will with very high probability
     #ensure that the name is unique
     source_directory = get_random_folder_name()
-    #check if the folder with given name already exists, assign a new folder name if it does
+    #check if the folder with given name already exists(highly improbable), assign a new folder name if it does
     while os.path.isdir(source_directory):source_directory=get_random_folder_name()
     os.mkdir(source_directory)
     source_file = open("{0}/prog".format(source_directory), 'w')
