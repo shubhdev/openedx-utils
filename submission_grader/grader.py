@@ -75,7 +75,7 @@ downloads file associated with the link to the current directory
 """
 def download(url):
     p = subprocess.check_output(["bash","downloader.sh",url])
-    #print p
+    print p
     if not p == "0":
         return ""
     filen, ext = os.path.splitext(url.split('/')[-1])
