@@ -45,6 +45,7 @@ else
     tmp=${file/input/res}
     output_file=${tmp/$tests/$source_root}
     #echo $output_file
+    echo "$output_file" >> log.txt
     execute
     #check if there was any runtime error
     if [ $exec_result -ne 0 ]; then
