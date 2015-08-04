@@ -37,7 +37,7 @@ class HTTPHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         body_content = self.rfile.read(body_len)
         print (self.headers.getheader('content-type'))
         print ("recieved: {0}".format(body_content))
-	    submission_info = preprocess(body_content)
+        submission_info = preprocess(body_content)
         result = grade(submission_info)
         final_result = process_result(result)
         self.send_response(200)
