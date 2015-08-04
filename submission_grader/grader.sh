@@ -19,9 +19,10 @@ execute(){
   #echo $file
   #echo $output_file
   case $language in
-    "c++")$($source_root/progc <$file >$output_file);;
-    "python2")$(python2 $source_root/progc <$file >$output_file);;
+    "c++")$(timeout 0.5s $source_root/progc <$file >$output_file);;
+    "python2")$(timeout 0.5s python2 $source_root/progc <$file >$output_file);;
   esac
+  exec_result=$?
 }
 check(){
  #TODO add the option to do the comparision with user given checker.
@@ -46,9 +47,14 @@ else
     #echo $output_file
     execute
     #check if there was any runtime error
-    if [ $? -ne 0 ]; then
+    if [ $exec_result -ne 0 ]; then
       #echo "Runtime Error on testcase: $file"
-      res=2
+      #echo $exec_result
+      if [ $exec_result -eq 124 ]; then
+        res=3
+      else
+        res=2
+      fi
     else
       expected_output=${file/input/out}
       check

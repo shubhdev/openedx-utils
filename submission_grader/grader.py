@@ -74,11 +74,13 @@ def preprocess(body_content):
 downloads file associated with the link to the current directory
 """
 def download(url):
-    #p = subprocess.check_output(["bash","downloader.sh",url])
+    p = subprocess.check_output(["bash","downloader.sh",url])
     #print p
-    #if not p == "1\n":
-    #    return ""
-    return url#.split('/')[-1]
+    if not p == "0":
+        return ""
+    filen, ext = os.path.splitext(url.split('/')[-1])
+    print ("downloaded"+filen)
+    return filen
 
 # returns a random folder name to be used by the grader
 def get_random_folder_name():
