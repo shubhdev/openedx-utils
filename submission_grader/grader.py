@@ -39,10 +39,9 @@ class HTTPHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         print ("recieved: {0}".format(body_content))
         submission_info = preprocess(body_content)
         result = grade(submission_info)
-        final_result = process_result(result)
         self.send_response(200)
         self.end_headers()
-        self.wfile.write(final_result)
+        self.wfile.write(result)
 
 def preprocess(body_content):
     json_object = json.loads(body_content)
@@ -65,24 +64,33 @@ def preprocess(body_content):
         tests = main_tests
     lang = submission_info["lang"]
     #return the preprocessing result as a json string
+    #TODO take time_limit input from instructor, currently hardcoded as 1s
+    time_limit = 1
     info = {
         "lang": lang,
         "submission": student_response,
-        "tests": tests
+        "tests": tests,
+        "time_limit": time_limit
     }
     #print info
     return info
 """
-downloads file associated with the link to the current directory
+downloads file associated with the link to the current directory,
+the bash script returns some predefined codes on error. if there was a download error, check if an older version exists.
+If yes then use that else return empty string
 """
 def download(url):
     p = subprocess.check_output(["bash","downloader.sh",url])
-    print p
-    if not p == "0":
-        return ""
+    #get the filename from the url
     filen, ext = os.path.splitext(url.split('/')[-1])
+    print p
+    if p == "1":
+        if os.isdir(filen): return (0,filen)
+    else : return (1,"")
+    if p == "2": return (2,"")
+
     print ("downloaded"+filen)
-    return filen
+    return (0,filen)
 
 # returns a random folder name to be used by the grader
 def get_random_folder_name():
@@ -92,7 +100,14 @@ def get_random_folder_name():
 def grade(submission_info):
     student_response = submission_info["submission"]
     lang = submission_info["lang"]
-    tests = submission_info["tests"]
+    err_code,tests = submission_info["tests"]           #CARE,python tuples are converted to lists in json loads,
+                                                        #but since we are directly passing json object, it doesnt matter
+    if err_code != 0 :
+        if err_code == 1 : err_msg = "Test Cases not available, please contact course staff"
+        else : err_msg = "Invalid testcases, please contact course staff"
+        return {'err_msg':err_msg,'error':1,'result':""}
+    else:
+    time_limit = submission_info['time_limit']
     #make a new temporary folder which will hold the student submission source code and the output files.
     #the folder is made as there can be more than one simultaneous checking of submissions, and having files in a common directory
     #will lead to a data race condition
@@ -107,12 +122,13 @@ def grade(submission_info):
     source_file = open("{0}/prog".format(source_directory), 'w')
     source_file.write(student_response)
     source_file.close()
-    result = subprocess.check_output(["bash","grader.sh",lang,tests,source_directory])
+
+    result = subprocess.check_output(["bash","grader.sh",lang,tests,source_directory,time_limit])  
     #print result
     result = json.loads(result.replace('\n','\\n'))    #this is necessary because the output of the bash script may contain newline,
                                                        #which is percived as is in python
 						                               #string. Read http://stackoverflow.com/questions/22394235/invalid-control-character-with-python-json-loads
-    return result
+    return process_result(result)
 
 """
 contains the logic to grade the submissions based on the result of the testcases
@@ -128,14 +144,16 @@ def process_result(result):
         message = result["err_msg"]
     else:
         correct = True
-        score = 1
-	message = json.dumps(result["result"])
-        
+        cnt = 0
+        result_codes = result['result']
+        #TODO decide on a scoring strategy.There can be marking for individual test cases or
+        #all combined marking for all testcases
+        #Currently, this is individual scoring assuming equal weightage for each test case
+        for result_code in result_codes :
+            if result_code != 0 : cnt++
+        score = cnt/len(result_codes)
+	    message = json.dumps(result["result"])
 
-    if (correct == True):
-        score = 1
-    else:
-        score = 0
 
     result = {}
     result.update({"correct": correct, "score": score, "msg": message })

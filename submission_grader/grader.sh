@@ -8,6 +8,7 @@
 language=$1
 tests=$2
 source_root=$3
+time_limit=$4
 #echo "lang:$language,testcases:$tests"
 compile(){
   case $language in
@@ -19,8 +20,8 @@ execute(){
   #echo $file
   #echo $output_file
   case $language in
-    "cpp")$(timeout 0.5s $source_root/progc <$file >$output_file);;
-    "python2")$(timeout 0.5s python2 $source_root/progc <$file >$output_file);;
+    "cpp")$(timeout $time_limit $source_root/progc <$file >$output_file);;
+    "python2")$(timeout $time_limit python2 $source_root/progc <$file >$output_file);;
   esac
   exec_result=$?
 }
@@ -38,14 +39,14 @@ if [ $? -ne 0 ]; then
   #echo "$err_msg"
 else
   err=0
-  result="{"
+  result="["
   cnt=0
   for file in $(find $tests -name "input*.dat" -type f | sort); do
     cnt=$(($cnt+1))
     tmp=${file/input/res}
     output_file=${tmp/$tests/$source_root}
     #echo $output_file
-    echo "$output_file" >> log.txt
+    #echo "$output_file" >> log.txt
     execute
     #check if there was any runtime error
     if [ $exec_result -ne 0 ]; then
@@ -68,12 +69,12 @@ else
       fi
      fi
      if [ $cnt -ne 1 ];then
-       result="$result,\"$cnt\":$res"
+       result="$result,$res"
      else
-       result="$result\"$cnt\":$res"
+       result="$result$res"
      fi
    done
-  result="$result}"
+  result="$result]"
   fi
 esc_err_msg=${err_msg//"\""/""}
 #echo "$esc_err_msg"
