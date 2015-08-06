@@ -42,14 +42,15 @@ class HTTPHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         final_result = process_result(result)
         self.send_response(200)
         self.end_headers()
-        self.wfile.write(result)
+        self.wfile.write(final_result)
 
 def preprocess(body_content):
     json_object = json.loads(body_content)
-    json_object = json_object["xqueue_body"]
-    submission_info = json_object["submission_info"]
+    json_object = json.loads(json_object["xqueue_body"])
+    #print json_object
+    submission_info = json.loads(json_object["submission_info"])
     student_response = json_object["student_response"]
-    grader_payload = json_object["grader_payload"]
+    grader_payload = json.loads(json_object["grader_payload"])
     #download the testcases, the grader payload should contain the links to the testcases
     #TODO do this in a try,exception body to ensure the validity of the json
     testfiles_main = grader_payload["main_tests"]
@@ -69,6 +70,7 @@ def preprocess(body_content):
         "submission": student_response,
         "tests": tests
     }
+    #print info
     return info
 """
 downloads file associated with the link to the current directory
@@ -118,14 +120,17 @@ TODO ask the grading logic from the instructor, either scoring is done for each 
 Either way, calculate the final score
 """
 def process_result(result):
-    return json.dumps(result)
-    if (result["compile_error"] != 0):
+    print (json.dumps(result))
+    #return json.dumps({"correct":True,"score":0,"msg":"test run, contact admins"})
+    if (result["error"] != 0):
         correct = False
         score = 0
-        message = result["compile_error"]
+        message = result["err_msg"]
     else:
-        correct = result["correct"]
-        message = result["msg"]
+        correct = True
+        score = 1
+	message = json.dumps(result["result"])
+        
 
     if (correct == True):
         score = 1
@@ -135,6 +140,7 @@ def process_result(result):
     result = {}
     result.update({"correct": correct, "score": score, "msg": message })
     result = json.dumps(result)
+    print result
     return result
 
 def test_random_folder_name():

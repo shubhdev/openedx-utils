@@ -11,7 +11,7 @@ source_root=$3
 #echo "lang:$language,testcases:$tests"
 compile(){
   case $language in
-    "c++")err_msg=$(g++ -x c++ $source_root/prog -o $source_root/progc 2>&1);;
+    "cpp")err_msg=$(g++ -x c++ $source_root/prog -o $source_root/progc 2>&1);;
     "python2")err_msg=$(python2 -m py_compile $source_root/prog 2>&1);;
   esac
 }
@@ -19,7 +19,7 @@ execute(){
   #echo $file
   #echo $output_file
   case $language in
-    "c++")$(timeout 0.5s $source_root/progc <$file >$output_file);;
+    "cpp")$(timeout 0.5s $source_root/progc <$file >$output_file);;
     "python2")$(timeout 0.5s python2 $source_root/progc <$file >$output_file);;
   esac
   exec_result=$?
