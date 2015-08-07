@@ -41,7 +41,7 @@ class HTTPHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         result = grade(submission_info)
         self.send_response(200)
         self.end_headers()
-        self.wfile.write(result)
+        self.wfile.write(process_result(result))
 
 def preprocess(body_content):
     json_object = json.loads(body_content)
@@ -65,7 +65,7 @@ def preprocess(body_content):
     lang = submission_info["lang"]
     #return the preprocessing result as a json string
     #TODO take time_limit input from instructor, currently hardcoded as 1s
-    time_limit = 1
+    time_limit = "1"
     info = {
         "lang": lang,
         "submission": student_response,
@@ -85,8 +85,8 @@ def download(url):
     filen, ext = os.path.splitext(url.split('/')[-1])
     print p
     if p == "1":
-        if os.isdir(filen): return (0,filen)
-    else : return (1,"")
+        if os.path.isdir(filen): return (0,filen)
+    	else : return (1,"")
     if p == "2": return (2,"")
 
     print ("downloaded"+filen)
@@ -107,28 +107,28 @@ def grade(submission_info):
         else : err_msg = "Invalid testcases, please contact course staff"
         return {'err_msg':err_msg,'error':1,'result':""}
     else:
-    time_limit = submission_info['time_limit']
-    #make a new temporary folder which will hold the student submission source code and the output files.
-    #the folder is made as there can be more than one simultaneous checking of submissions, and having files in a common directory
-    #will lead to a data race condition
-    #there can be more than one ways to get a folder name which is unique to each submission,here we will concatenate
-    #the current unix timestamp with a random number
-    #in the rare case that 2 submissions are being processed at exactly the same timestamp, the random number will with very high probability
-    #ensure that the name is unique
-    source_directory = get_random_folder_name()
-    #check if the folder with given name already exists(highly improbable), assign a new folder name if it does
-    while os.path.isdir(source_directory):source_directory=get_random_folder_name()
-    os.mkdir(source_directory)
-    source_file = open("{0}/prog".format(source_directory), 'w')
-    source_file.write(student_response)
-    source_file.close()
+    	time_limit = submission_info['time_limit']
+    	#make a new temporary folder which will hold the student submission source code and the output files.
+    	#the folder is made as there can be more than one simultaneous checking of submissions, and having files in a common directory
+    	#will lead to a data race condition
+    	#there can be more than one ways to get a folder name which is unique to each submission,here we will concatenate
+    	#the current unix timestamp with a random number
+    	#in the rare case that 2 submissions are being processed at exactly the same timestamp, the random number will with very high probability
+    	#ensure that the name is unique
+    	source_directory = get_random_folder_name()
+    	#check if the folder with given name already exists(highly improbable), assign a new folder name if it does
+    	while os.path.isdir(source_directory):source_directory=get_random_folder_name()
+   	os.mkdir(source_directory)
+    	source_file = open("{0}/prog".format(source_directory), 'w')
+    	source_file.write(student_response)
+    	source_file.close()
 
-    result = subprocess.check_output(["bash","grader.sh",lang,tests,source_directory,time_limit])  
-    #print result
-    result = json.loads(result.replace('\n','\\n'))    #this is necessary because the output of the bash script may contain newline,
-                                                       #which is percived as is in python
-						                               #string. Read http://stackoverflow.com/questions/22394235/invalid-control-character-with-python-json-loads
-    return process_result(result)
+    	result = subprocess.check_output(["bash","grader.sh",lang,tests,source_directory,time_limit])  
+    	#print result
+    	result = json.loads(result.replace('\n','\\n'))    #this is necessary because the output of the bash script may contain newline,
+       	                                                   #which is percived as is in python string.
+							   # Read http://stackoverflow.com/questions/22394235/invalid-control-character-with-python-json-loads
+    	return result
 
 """
 contains the logic to grade the submissions based on the result of the testcases
@@ -150,9 +150,10 @@ def process_result(result):
         #all combined marking for all testcases
         #Currently, this is individual scoring assuming equal weightage for each test case
         for result_code in result_codes :
-            if result_code != 0 : cnt++
+            if result_code != 0 : cnt+=1.0
+	print (cnt,len(result_codes))
         score = cnt/len(result_codes)
-	    message = json.dumps(result["result"])
+	message = json.dumps(result["result"])
 
 
     result = {}
