@@ -29,3 +29,8 @@ I have discussed about that issue [here](https://github.com/edx/configuration/is
 * Open edx has a nice [wiki](https://github.com/edx/configuration/wiki/).
 * Open edx also has google mailing lists for various topics. The ones is found most useful and active are https://groups.google.com/forum/#!forum/edx-code and https://groups.google.com/forum/#!forum/openedx-ops. Feel free to ask doubts here about any issues you face. You may also search for posts I have made by searching my name in the search box.
 * Official documentation : http://edx.readthedocs.org/projects/. (Though its not thorough)
+
+
+# NOTE:
+When you git pull or push from the repository on the server, you have to run the ansible 'update' command as mentioned here https://github.com/edx/configuration/wiki/edX-Managing-the-Full-Stack. This is because edx caches the compiled and compressed static files in /edx/var/edxapp/staticfiles. each time the files are stored in a folder whose name is the hash of the latest git commit. On not running the update and using git pull/push the latest commit changes but the staticfiles folder is not created. so on loading the webpage, none of the staticfiles load and browser gets a 404 error.
+Read this for information on the same: https://groups.google.com/forum/#!searchin/openedx-ops/nilesh$20londhe/openedx-ops/6KXNVAYWq4c/JVy0xBHo5DoJ
